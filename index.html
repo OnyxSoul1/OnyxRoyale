@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OnyxRoyale — Type or Die</title>
+    <style>
+        /* ===== BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;600&display=swap');
+
+        /* ===== SCROLLING FIX ===== */
+        body {
+            background: #0a0808;
+            color: #e0d6d0;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            height: auto;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            background-image:
+                radial-gradient(ellipse at 50% 80%, rgba(80, 20, 20, 0.3) 0%, transparent 60%),
+                radial-gradient(ellipse at 50% 20%, rgba(40, 10, 10, 0.2) 0%, transparent 40%),
+                linear-gradient(180deg, #0a0808 0%, #141010 100%);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .bg-dust {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background-image:
+                radial-gradient(2px 2px at 20% 30%, rgba(255, 255, 255, 0.05), transparent),
+                radial-gradient(2px 2px at 40% 70%, rgba(255, 255, 255, 0.04), transparent),
+                radial-gradient(2px 2px at 60% 20%, rgba(255, 255, 255, 0.03), transparent),
+                radial-gradient(2px 2px at 80% 80%, rgba(255, 255, 255, 0.05), transparent);
+        }
+
+        .bg-vignette {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0, 0, 0, 0.7) 100%);
+        }
+
+        .game-container {
+            max-width: 1100px;
+            width: 100%;
+            background: rgba(20, 16, 16, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(180, 120, 100, 0.15);
+            border-radius: 20px;
+            padding: 35px 30px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            position: relative;
+            z-index: 2;
+            margin: 20px 0;
+            max-height: none;
+            overflow: visible;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(180, 120, 100, 0.1);
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            color: #e8ddd0;
+            letter-spacing: 4px;
+            text-shadow: 0 0 60px rgba(180, 120, 100, 0.15);
+        }
+
+        .header h1 span {
+            color: #b84a4a;
+            text-shadow: 0 0 40px rgba(184, 74, 74, 0.3);
+        }
+
+        .header .sub {
+            color: #8a7a72;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header .sub button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(180, 120, 100, 0.15);
+            color: #b0a098;
+            padding: 4px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.7rem;
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+        }
+
+        .header .sub button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #b84a4a;
+            color: #e8ddd0;
+            box-shadow: 0 0 20px rgba(184, 74, 74, 0.1);
+        }
+
+        /* ===== SCENE IMAGE ===== */
+        .scene-image {
+            position: relative;
+            width: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            background: #0a0808;
+            border: 1px solid rgba(180, 120, 100, 0.08);
+        }
+
+        .scene-image img {
+            width: 100%;
+            height: auto;
+            display: block;
+            opacity: 0.6;
+            filter: grayscale(30%) contrast(1.1);
+            max-height: 350px;
+            object-fit: cover;
+        }
+
+        .scene-overlay-text {
+            position: absolute;
+            bottom: 12px;
+            right: 16px;
+            color: rgba(180, 160, 150, 0.3);
+            font-size: 0.55rem;
+            letter-spacing: 1px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+
+        .scene-overlay-text span {
+            display: block;
+        }
+        .scene-overlay-text .version {
+            color: rgba(180, 160, 150, 0.4);
+        }
+        .scene-overlay-text .revision {
+            color: rgba(180, 160, 150, 0.25);
+        }
+        .scene-overlay-text .env {
+            color: rgba(180, 160, 150, 0.15);
+        }
+
+        /* ===== THE ROOM ===== */
+        .room {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(10, 8, 8, 0.4);
+            border: 1px solid rgba(180, 120, 100, 0.08);
+            border-radius: 16px;
+            padding: 40px 30px 30px 30px;
+            position: relative;
+            margin-bottom: 20px;
+            min-height: 350px;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        .prop-typewriter {
+            position: absolute;
+            bottom: 10px;
+            left: 30px;
+            font-size: 3.5rem;
+            opacity: 0.15;
+            transform: rotate(-5deg);
+            filter: grayscale(100%);
+        }
+
+        .prop-revolver {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            font-size: 2.8rem;
+            opacity: 0.15;
+            transform: rotate(15deg);
+            filter: grayscale(100%);
+        }
+
+        .prop-mask {
+            position: absolute;
+            top: -15px;
+            right: 40px;
+            font-size: 3.5rem;
+            opacity: 0.1;
+            transform: rotate(5deg);
+            filter: grayscale(100%);
+        }
+
+        .sentence-area {
+            width: 100%;
+            text-align: center;
+            margin: 0 0 25px 0;
+        }
+
+        .sentence-area .prompt-label {
+            color: #8a7a72;
+            font-size: 0.6rem;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .sentence-area .sentence {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #f0e8e0;
+            letter-spacing: 6px;
+            padding: 10px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            text-shadow: 0 0 40px rgba(200, 180, 160, 0.05);
+            line-height: 1.4;
+        }
+
+        .sentence .char {
+            display: inline-block;
+            transition: 0.05s;
+            padding: 2px 2px;
+        }
+
+        .sentence .char.done {
+            color: #8a9a7a;
+        }
+
+        .sentence .char.wrong {
+            color: #b84a4a;
+            background: rgba(184, 74, 74, 0.15);
+            border-radius: 2px;
+        }
+
+        .sentence .char.current {
+            color: #f0e8e0;
+            border-bottom: 3px solid #b84a4a;
+            animation: blink 0.8s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%,
+            100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .type-input-area {
+            width: 100%;
+            max-width: 600px;
+            margin: 5px 0 20px 0;
+        }
+
+        #typingInput {
+            width: 100%;
+            background: rgba(10, 8, 8, 0.6);
+            border: 1px solid rgba(180, 120, 100, 0.15);
+            border-radius: 12px;
+            color: #e0d6d0;
+            padding: 16px 24px;
+            font-size: 1.4rem;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            text-align: center;
+            letter-spacing: 4px;
+            transition: 0.3s;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        #typingInput:focus {
+            border-color: rgba(184, 74, 74, 0.4);
+            box-shadow: 0 0 40px rgba(184, 74, 74, 0.05), inset 0 0 20px rgba(184, 74, 74, 0.02);
+        }
+
+        #typingInput:disabled {
+            opacity: 0.2;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+
+        #typingInput::placeholder {
+            color: #5a4a42;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+        }
+
+        .players-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 10px;
+            margin: 15px 0 20px 0;
+            width: 100%;
+        }
+
+        .player-card {
+            background: rgba(20, 16, 16, 0.6);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(180, 120, 100, 0.08);
+            border-radius: 12px;
+            padding: 12px 16px;
+            transition: 0.3s;
+            position: relative;
+        }
+
+        .player-card.alive {
+            border-color: rgba(100, 140, 100, 0.15);
+        }
+
+        .player-card.dead {
+            opacity: 0.2;
+            border-color: rgba(80, 40, 40, 0.2);
+            filter: grayscale(100%);
+        }
+
+        .player-card.dead .player-name {
+            text-decoration: line-through;
+            color: #6a5a52;
+        }
+
+        .player-card .player-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #e0d6d0;
+            margin-bottom: 4px;
+        }
+
+        .player-card .status {
+            font-size: 0.55rem;
+            color: #6a5a52;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .player-card .status.alive-status {
+            color: #8a9a7a;
+        }
+
+        .player-card .status.dead-status {
+            color: #7a4a4a;
+        }
+
+        .player-card .progress {
+            height: 3px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            margin: 8px 0 4px 0;
+            overflow: hidden;
+        }
+
+        .player-card .progress .bar {
+            height: 100%;
+            width: 0%;
+            background: #b84a4a;
+            transition: width 0.1s;
+        }
+
+        .player-card .mistakes {
+            font-size: 0.55rem;
+            color: #5a4a42;
+            margin-top: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 10px 0 5px 0;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(180, 120, 100, 0.15);
+            color: #e0d6d0;
+            padding: 14px 32px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(184, 74, 74, 0.4);
+            color: #f0e8e0;
+            box-shadow: 0 4px 30px rgba(184, 74, 74, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-primary {
+            border-color: rgba(184, 74, 74, 0.3);
+            color: #f0e8e0;
+            background: rgba(184, 74, 74, 0.08);
+        }
+
+        .btn-primary:hover {
+            background: rgba(184, 74, 74, 0.15);
+            border-color: #b84a4a;
+            box-shadow: 0 4px 40px rgba(184, 74, 74, 0.15);
+        }
+
+        .btn-success {
+            border-color: rgba(100, 160, 100, 0.2);
+            color: #b0c8a0;
+            background: rgba(100, 160, 100, 0.05);
+        }
+
+        .btn-success:hover {
+            border-color: rgba(100, 160, 100, 0.4);
+            color: #d0e8c0;
+        }
+
+        .btn-danger {
+            border-color: rgba(160, 60, 60, 0.2);
+            color: #b07070;
+            background: rgba(160, 60, 60, 0.05);
+        }
+
+        .btn-danger:hover {
+            border-color: rgba(160, 60, 60, 0.4);
+            color: #d09090;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7rem;
+            color: #5a4a42;
+            border-top: 1px solid rgba(180, 120, 100, 0.05);
+            padding-top: 14px;
+            margin-top: 5px;
+            width: 100%;
+        }
+
+        .status-bar .round-info span {
+            color: #b0a098;
+        }
+
+        .status-bar .alive-info span {
+            color: #8a9a7a;
+        }
+
+        .status-bar .chamber-info span {
+            color: #b84a4a;
+        }
+
+        .log {
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border: 1px solid rgba(180, 120, 100, 0.05);
+            border-radius: 8px;
+            padding: 8px 14px;
+            max-height: 60px;
+            overflow-y: auto;
+            font-size: 0.65rem;
+            color: #5a4a42;
+            margin-top: 12px;
+            text-align: left;
+            width: 100%;
+        }
+
+        .log .info {
+            color: #7a8a9a;
+        }
+        .log .success {
+            color: #8a9a7a;
+        }
+        .log .error {
+            color: #b07070;
+        }
+        .log .warn {
+            color: #b09870;
+        }
+        .log .death {
+            color: #b84a4a;
+            font-weight: bold;
+        }
+
+        .winner-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+
+        .winner-overlay.show {
+            display: flex;
+        }
+
+        .winner-overlay .winner-text {
+            font-family: 'Playfair Display', serif;
+            font-size: 4.5rem;
+            color: #b84a4a;
+            text-shadow: 0 0 80px rgba(184, 74, 74, 0.3);
+            text-align: center;
+            margin-bottom: 10px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        .winner-overlay .sub-text {
+            color: #8a7a72;
+            font-size: 1.2rem;
+            letter-spacing: 4px;
+        }
+
+        .winner-overlay .btn {
+            margin-top: 30px;
+        }
+
+        .footer {
+            margin-top: 18px;
+            font-size: 0.6rem;
+            color: #4a3a32;
+            text-align: center;
+            border-top: 1px solid rgba(180, 120, 100, 0.05);
+            padding-top: 12px;
+        }
+
+        .footer a {
+            color: #8a7a72;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .footer a:hover {
+            color: #b0a098;
+            text-shadow: 0 0 20px rgba(180, 120, 100, 0.1);
+        }
+
+        /* ===== SCROLL INDICATOR ===== */
+        .scroll-hint {
+            position: fixed;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(180, 160, 150, 0.2);
+            font-size: 0.6rem;
+            letter-spacing: 2px;
+            animation: pulse 2s ease-in-out infinite;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        @keyframes pulse {
+            0%,
+            100% {
+                opacity: 0.2;
+            }
+            50% {
+                opacity: 0.8;
+            }
+        }
+
+        @media (max-width: 700px) {
+            .game-container {
+                padding: 20px 15px;
+            }
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            .sentence-area .sentence {
+                font-size: 2rem;
+            }
+            #typingInput {
+                font-size: 1rem;
+                padding: 12px 16px;
+            }
+            .players-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .winner-overlay .winner-text {
+                font-size: 2.8rem;
+            }
+            .prop-typewriter,
+            .prop-revolver,
+            .prop-mask {
+                display: none;
+            }
+            .btn {
+                padding: 10px 20px;
+                font-size: 0.7rem;
+            }
+            .scene-image img {
+                max-height: 200px;
+            }
+        }
+
+        @media (max-width: 450px) {
+            .players-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-dust"></div>
+    <div class="bg-vignette"></div>
+
+    <div class="game-container">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>ONYX<span>ROYALE</span></h1>
+            <div class="sub">
+                <span id="roomDisplay">Room: —</span>
+                <span id="roundDisplay">Round 0</span>
+                <button onclick="copyRoomId()">📋 Copy ID</button>
+            </div>
+        </div>
+
+        <!-- SCENE IMAGE -->
+        <div class="scene-image">
+            <img src="https://insider-gaming.com/wp-content/uploads/2025/10/final-sentence.jpg" alt="The Room" loading="lazy">
+            <div class="scene-overlay-text">
+                <span class="version">Version 0.2.8</span>
+                <span class="revision">Revision 18074</span>
+                <span class="env">Environment: Blueprint</span>
+            </div>
+        </div>
+
+        <!-- THE ROOM -->
+        <div class="room">
+            <div class="prop-typewriter">⌨️</div>
+            <div class="prop-revolver">🔫</div>
+            <div class="prop-mask">🎭</div>
+
+            <div class="sentence-area">
+                <div class="prompt-label">⚡ THE SENTENCE ⚡</div>
+                <div class="sentence" id="sentenceDisplay">Waiting for game to start...</div>
+            </div>
+
+            <div class="type-input-area">
+                <input type="text" id="typingInput" placeholder="Type the sentence here..." disabled>
+            </div>
+
+            <div class="players-grid" id="playersGrid">
+                <div style="color: #4a3a32; grid-column: 1 / -1; padding: 20px; text-align: center; font-size: 0.8rem;">
+                    Waiting for players...
+                </div>
+            </div>
+
+            <div class="controls">
+                <button class="btn btn-success" id="startBtn" disabled>🎯 Start Round</button>
+                <button class="btn btn-primary" id="joinBtn">🔗 Join Room</button>
+                <button class="btn btn-primary" id="createBtn">✨ Create Room</button>
+            </div>
+
+            <div class="status-bar">
+                <div class="round-info">Round: <span id="roundNumber">0</span></div>
+                <div class="alive-info">Alive: <span id="aliveCount">0</span></div>
+                <div class="chamber-info">Chamber: <span id="chamberCount">0</span> / 6</div>
+            </div>
+
+            <div class="log" id="logBox">[OnyxRoyale] Connect to a room to begin.</div>
+        </div>
+
+        <div class="footer">
+            ⛧ OnyxRoyale — Type or Die &nbsp;|&nbsp; Created by <a href="https://shorturl.at/V0YaL" target="_blank">OnyxSoul</a>
+        </div>
+    </div>
+
+    <!-- SCROLL INDICATOR -->
+    <div class="scroll-hint">⤵ Scroll to explore ⤵</div>
+
+    <!-- WINNER OVERLAY -->
+    <div class="winner-overlay" id="winnerOverlay">
+        <div class="winner-text" id="winnerText">💀</div>
+        <div class="sub-text" id="winnerSub">No one survived.</div>
+        <button class="btn btn-primary" id="continueBtn">🔄 Continue</button>
+    </div>
+
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js">
+    </script>
+    <script>
+        // ============================================================
+        // ONYXROYALE — ENGINE
+        // ============================================================
+
+        const SERVER_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ?
+            'http://localhost:3000' :
+            'https://your-server.onrender.com'; // CHANGE THIS
+
+        let socket = null;
+        let roomId = null;
+        let playerId = null;
+        let isInRoom = false;
+        let currentSentence = '';
+
+        // --- DOM ---
+        const sentenceDisplay = document.getElementById('sentenceDisplay');
+        const typingInput = document.getElementById('typingInput');
+        const playersGrid = document.getElementById('playersGrid');
+        const startBtn = document.getElementById('startBtn');
+        const joinBtn = document.getElementById('joinBtn');
+        const createBtn = document.getElementById('createBtn');
+        const logBox = document.getElementById('logBox');
+        const roundNumber = document.getElementById('roundNumber');
+        const aliveCount = document.getElementById('aliveCount');
+        const chamberCount = document.getElementById('chamberCount');
+        const roundDisplay = document.getElementById('roundDisplay');
+        const roomDisplay = document.getElementById('roomDisplay');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const winnerText = document.getElementById('winnerText');
+        const winnerSub = document.getElementById('winnerSub');
+        const continueBtn = document.getElementById('continueBtn');
+
+        // --- Realism ---
+        function playTypeSound() {
+            try {
+                const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 600 + Math.random() * 400;
+                osc.type = 'square';
+                gain.gain.value = 0.03;
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.03);
+            } catch (e) {}
+        }
+
+        function playChamberSound() {
+            try {
+                const audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.frequency.value = 150;
+                osc.type = 'sawtooth';
+                gain.gain.value = 0.06;
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.08);
+            } catch (e) {}
+        }
+
+        function triggerHeartbeat() {
+            const room = document.querySelector('.room');
+            room.style.transition = 'background 0.3s';
+            room.style.background = 'rgba(40, 10, 10, 0.3)';
+            setTimeout(() => {
+                room.style.background = 'rgba(10, 8, 8, 0.4)';
+            }, 300);
+        }
+
+        // --- Log ---
+        function log(msg, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = type;
+            const ts = new Date().toLocaleTimeString();
+            entry.textContent = `[${ts}] ${msg}`;
+            logBox.appendChild(entry);
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+
+        // --- UI ---
+        function renderPlayers(players) {
+            if (!players || players.length === 0) {
+                playersGrid.innerHTML =
+                    `<div style="color: #4a3a32; grid-column: 1 / -1; padding: 20px; text-align: center; font-size: 0.8rem;">The room is empty. Share the room ID to invite friends.</div>`;
+                return;
+            }
+            playersGrid.innerHTML = players.map(p => `
+                    <div class="player-card ${p.alive ? 'alive' : 'dead'}" id="pcard-${p.id}">
+                        <div class="player-name">${p.alive ? '❤️' : '💀'} ${p.name}</div>
+                        <div class="status ${p.alive ? 'alive-status' : 'dead-status'}">${p.alive ? 'ALIVE' : 'DEAD'}</div>
+                        <div class="progress">
+                            <div class="bar" id="pbar-${p.id}" style="width: ${p.progress}%;"></div>
+                        </div>
+                        <div class="mistakes">Mistakes: ${p.mistakes}</div>
+                    </div>
+                `).join('');
+            const alive = players.filter(p => p.alive).length;
+            aliveCount.textContent = alive;
+        }
+
+        function updateSentence() {
+            if (!currentSentence) {
+                sentenceDisplay.textContent = 'Waiting for game to start...';
+                return;
+            }
+            const cards = document.querySelectorAll('.player-card');
+            const players = [];
+            cards.forEach(card => {
+                const name = card.querySelector('.player-name')?.textContent?.replace(/[❤️💀]/g, '').trim() || '';
+                const alive = !card.classList.contains('dead');
+                const progress = parseFloat(card.querySelector('.bar')?.style?.width || '0');
+                const mistakes = parseInt(card.querySelector('.mistakes')?.textContent?.replace(/\D/g, '') || '0');
+                players.push({ name, alive, progress, mistakes, isTurn: false });
+            });
+            const currentPlayer = players.find(p => p.alive && p.progress < 100);
+            if (!currentPlayer) {
+                sentenceDisplay.textContent = 'Waiting for turn...';
+                return;
+            }
+            const word = currentSentence;
+            const progress = currentPlayer.progress;
+            let html = '';
+            for (let i = 0; i < word.length; i++) {
+                let cls = 'char';
+                if (i < progress) cls += ' done';
+                else if (i === progress) cls += ' current';
+                html += `<span class="${cls}">${word[i]}</span>`;
+            }
+            sentenceDisplay.innerHTML = html;
+        }
+
+        function updateStatus(round, chamber) {
+            roundNumber.textContent = round || 0;
+            chamberCount.textContent = chamber || 0;
+            roundDisplay.textContent = `Round ${round || 0}`;
+        }
+
+        function showWinner(name) {
+            if (name) {
+                winnerText.textContent = `🏆 ${name} WINS!`;
+                winnerSub.textContent = 'The last one standing.';
+            } else {
+                winnerText.textContent = '💀 NO ONE SURVIVED';
+                winnerSub.textContent = 'The room is empty.';
+            }
+            winnerOverlay.classList.add('show');
+        }
+
+        // --- Socket ---
+        function connectToServer() {
+            if (socket && socket.connected) return;
+            socket = io(SERVER_URL);
+            log('🔗 Connecting...', 'info');
+            socket.on('connect', () => log('✅ Connected!', 'success'));
+            socket.on('disconnect', () => {
+                log('❌ Disconnected.', 'error');
+                isInRoom = false;
+                startBtn.disabled = true;
+                typingInput.disabled = true;
+            });
+            socket.on('roomJoined', ({ roomId: id, playerId: pid }) => {
+                roomId = id;
+                playerId = pid;
+                isInRoom = true;
+                roomDisplay.textContent = `Room: ${roomId}`;
+                log(`✅ Joined room: ${roomId}`, 'success');
+                startBtn.disabled = true;
+                typingInput.disabled = true;
+            });
+            socket.on('updatePlayers', (players) => {
+                renderPlayers(players);
+                if (currentSentence) updateSentence();
+                const alive = players.filter(p => p.alive).length;
+                startBtn.disabled = !(alive >= 2 && !document.querySelector('.round-active'));
+            });
+            socket.on('roundStarted', ({ sentence, roundNumber: round }) => {
+                currentSentence = sentence;
+                log(`🔫 Round ${round} started!`, 'info');
+                updateStatus(round, 0);
+                typingInput.disabled = false;
+                typingInput.value = '';
+                typingInput.focus();
+                startBtn.disabled = true;
+                document.querySelector('.room').classList.add('round-active');
+                updateSentence();
+            });
+            socket.on('roundEnded', ({ winner }) => {
+                typingInput.disabled = true;
+                startBtn.disabled = false;
+                document.querySelector('.room').classList.remove('round-active');
+                if (winner) log(`🏆 ${winner} wins the round!`, 'success');
+                else log('No winner this round.', 'warn');
+                setTimeout(() => socket.emit('updatePlayers', roomId), 500);
+            });
+            socket.on('gameOver', ({ winner }) => showWinner(winner));
+            socket.on('updateChamber', (chamber) => {
+                chamberCount.textContent = chamber;
+                if (chamber > 0) playChamberSound();
+                if (chamber >= 4) triggerHeartbeat();
+            });
+            socket.on('message', (msg) => {
+                log(msg, 'info');
+                if (msg.includes('Mistake')) playTypeSound();
+                if (msg.includes('eliminated')) triggerHeartbeat();
+            });
+            socket.on('error', (msg) => log(`❌ ${msg}`, 'error'));
+        }
+
+        // --- Actions ---
+        function createRoom() {
+            const name = prompt('Enter your name:') || 'Player';
+            if (!socket) connectToServer();
+            const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+            socket.emit('joinRoom', { roomId: newRoomId, playerName: name });
+            roomDisplay.textContent = `Room: ${newRoomId}`;
+            log(`✨ Created room: ${newRoomId}`, 'success');
+        }
+
+        function joinRoom() {
+            const id = prompt('Enter room ID:');
+            if (!id) return;
+            const name = prompt('Enter your name:') || 'Player';
+            if (!socket) connectToServer();
+            socket.emit('joinRoom', { roomId: id.toUpperCase(), playerName: name });
+        }
+
+        function startRound() {
+            if (!socket || !roomId) return;
+            socket.emit('startRound', roomId);
+        }
+
+        function copyRoomId() {
+            if (!roomId) { log('No room ID.', 'warn'); return; }
+            navigator.clipboard?.writeText(roomId);
+            log('📋 Room ID copied!', 'success');
+        }
+
+        // --- Typing ---
+        typingInput.addEventListener('input', function(e) {
+            if (!socket || !roomId || !isInRoom) return;
+            const input = this.value;
+            if (input.length === 0) return;
+            const char = input[input.length - 1];
+            socket.emit('typeChar', { roomId, char });
+            this.value = '';
+            playTypeSound();
+        });
+
+        // --- Continue ---
+        continueBtn.addEventListener('click', () => {
+            winnerOverlay.classList.remove('show');
+            if (socket && roomId) socket.emit('updatePlayers', roomId);
+        });
+
+        // --- Init ---
+        connectToServer();
+        createBtn.addEventListener('click', createRoom);
+        joinBtn.addEventListener('click', joinRoom);
+        startBtn.addEventListener('click', startRound);
+
+        log('⛧ OnyxRoyale loaded. Create or join a room.', 'info');
+    </script>
+</body>
+</html>
